@@ -11,45 +11,63 @@ export const formatThermalReceipt = (receipt: ReceiptType, formatPrice: (price: 
     }).format(date);
   };
 
-  return `
-===============================
-  TOKO ANJAR FOTOCOPY & ATK
-===============================
+  // ESC/POS Commands
+  const ESC = '\x1B';
+  const BOLD_ON = ESC + 'E\x01';
+  const BOLD_OFF = ESC + 'E\x00';
+  const CENTER = ESC + 'a\x01';
+  const LEFT = ESC + 'a\x00';
+  const CUT = '\x1D' + 'V\x42\x00';
+  
+  // Format harga tanpa simbol currency karena kita tulis manual
+  const formatAmount = (amount: number) => {
+    return new Intl.NumberFormat('id-ID').format(amount);
+  };
+
+  return `${ESC}@${CENTER}${BOLD_ON}================================${BOLD_OFF}
+${BOLD_ON}  TOKO ANJAR FOTOCOPY & ATK${BOLD_OFF}
+${BOLD_ON}================================${BOLD_OFF}
 Jl. Raya Gajah - dempet
 (Depan Koramil Gajah)
 Telp/WA: 0895630183347
 
-===============================
-       STRUK PENJUALAN
-===============================
-Invoice: ${receipt.id}
+${BOLD_ON}================================${BOLD_OFF}
+${BOLD_ON}       STRUK PENJUALAN${BOLD_OFF}
+${BOLD_ON}================================${BOLD_OFF}
+Invoice: ${BOLD_ON}${receipt.id}${BOLD_OFF}
 Tanggal: ${formatDate(receipt.timestamp)}
--------------------------------
-
+${BOLD_ON}--------------------------------${BOLD_OFF}
+${LEFT}
 ${receipt.items.map(item => {
   const price = item.finalPrice || item.product.sellPrice;
   const total = price * item.quantity;
-  const line1 = item.product.name;
-  const line2 = `${item.quantity} x ${formatPrice(price)}`;
-  const line3 = formatPrice(total).padStart(31);
-  return `${line1}\n${line2}\n${line3}`;
+  const itemName = item.product.name;
+  const qtyPrice = `${item.quantity} x Rp ${formatAmount(price)}`;
+  const totalPrice = `Rp ${formatAmount(total)}`;
+  
+  // Untuk kertas kecil (32 karakter)
+  return `${itemName}
+${qtyPrice}
+${' '.repeat(Math.max(0, 32 - totalPrice.length))}${BOLD_ON}${totalPrice}${BOLD_OFF}`;
 }).join('\n\n')}
 
--------------------------------
-Subtotal:${formatPrice(receipt.subtotal).padStart(20)}${receipt.discount > 0 ? `\nDiskon:${formatPrice(receipt.discount).padStart(22)}` : ''}
--------------------------------
-TOTAL:${formatPrice(receipt.total).padStart(23)}
+${BOLD_ON}--------------------------------${BOLD_OFF}
+Subtotal: ${' '.repeat(Math.max(0, 15 - `Rp ${formatAmount(receipt.subtotal)}`.length))}${BOLD_ON}Rp ${formatAmount(receipt.subtotal)}${BOLD_OFF}${receipt.discount > 0 ? `
+Diskon: ${' '.repeat(Math.max(0, 17 - `Rp ${formatAmount(receipt.discount)}`.length))}${BOLD_ON}Rp ${formatAmount(receipt.discount)}${BOLD_OFF}` : ''}
+${BOLD_ON}--------------------------------${BOLD_OFF}
+${BOLD_ON}TOTAL: ${' '.repeat(Math.max(0, 18 - `Rp ${formatAmount(receipt.total)}`.length))}Rp ${formatAmount(receipt.total)}${BOLD_OFF}
 
-Metode: ${receipt.paymentMethod?.toUpperCase() || 'CASH'}
-Profit: ${formatPrice(receipt.profit)}
+Metode: ${BOLD_ON}${receipt.paymentMethod?.toUpperCase() || 'CASH'}${BOLD_OFF}
+Profit: ${BOLD_ON}Rp ${formatAmount(receipt.profit)}${BOLD_OFF}
 
-===============================
-    TERIMA KASIH ATAS
-    KUNJUNGAN ANDA!
+${CENTER}${BOLD_ON}================================${BOLD_OFF}
+${BOLD_ON}    TERIMA KASIH ATAS${BOLD_OFF}
+${BOLD_ON}    KUNJUNGAN ANDA!${BOLD_OFF}
     
-  Semoga Hari Anda Menyenangkan
-===============================
-`;
+${BOLD_ON}  Semoga Hari Anda Menyenangkan${BOLD_OFF}
+${BOLD_ON}================================${BOLD_OFF}
+
+${CUT}`;
 };
 
 export const formatPrintReceipt = (receipt: ReceiptType, formatPrice: (price: number) => string): string => {
@@ -61,6 +79,11 @@ export const formatPrintReceipt = (receipt: ReceiptType, formatPrice: (price: nu
       hour: '2-digit',
       minute: '2-digit',
     }).format(date);
+  };
+
+  // Format harga tanpa simbol currency karena kita tulis manual
+  const formatAmount = (amount: number) => {
+    return new Intl.NumberFormat('id-ID').format(amount);
   };
 
   return `
@@ -82,10 +105,10 @@ export const formatPrintReceipt = (receipt: ReceiptType, formatPrice: (price: nu
             <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
               <div>
                 <div style="font-weight: bold;">${item.product.name}</div>
-                <div style="font-size: 12px;">${formatPrice(item.finalPrice || item.product.sellPrice)} × ${item.quantity}</div>
+                <div style="font-size: 12px;">Rp ${formatAmount(item.finalPrice || item.product.sellPrice)} × ${item.quantity}</div>
               </div>
               <div style="font-weight: bold;">
-                ${formatPrice((item.finalPrice || item.product.sellPrice) * item.quantity)}
+                Rp ${formatAmount((item.finalPrice || item.product.sellPrice) * item.quantity)}
               </div>
             </div>
           `).join('')}
@@ -94,17 +117,17 @@ export const formatPrintReceipt = (receipt: ReceiptType, formatPrice: (price: nu
         <div style="border-top: 1px dashed #000; margin: 20px 0; padding-top: 10px;">
           <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
             <span>Subtotal:</span>
-            <span>${formatPrice(receipt.subtotal)}</span>
+            <span>Rp ${formatAmount(receipt.subtotal)}</span>
           </div>
           ${receipt.discount > 0 ? `
             <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #dc2626;">
               <span>Diskon:</span>
-              <span>-${formatPrice(receipt.discount)}</span>
+              <span>-Rp ${formatAmount(receipt.discount)}</span>
             </div>
           ` : ''}
           <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; margin-top: 10px; border-top: 1px solid #000; padding-top: 10px;">
             <span>TOTAL:</span>
-            <span>${formatPrice(receipt.total)}</span>
+            <span>Rp ${formatAmount(receipt.total)}</span>
           </div>
         </div>
         
