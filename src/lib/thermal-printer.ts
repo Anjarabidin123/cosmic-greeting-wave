@@ -115,8 +115,22 @@ export class ThermalPrinter {
       const data = encoder.encode(commands);
       
       if (this.characteristic) {
-        await this.characteristic.writeValue(data);
-        console.log('Print command sent successfully');
+        // Split data into chunks of 512 bytes or less
+        const chunkSize = 512;
+        const chunks: Uint8Array[] = [];
+        
+        for (let i = 0; i < data.length; i += chunkSize) {
+          chunks.push(data.slice(i, i + chunkSize));
+        }
+        
+        // Send each chunk with a small delay
+        for (const chunk of chunks) {
+          await this.characteristic.writeValue(chunk);
+          // Small delay between chunks to ensure proper transmission
+          await new Promise(resolve => setTimeout(resolve, 50));
+        }
+        
+        console.log(`Print command sent successfully in ${chunks.length} chunks`);
         return true;
       }
       
