@@ -9,7 +9,10 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ShoppingCart as CartIcon, Trash2, CreditCard, Percent, Printer, Edit, ExternalLink } from 'lucide-react';
+import { ShoppingCart as CartIcon, Trash2, CreditCard, Percent, Printer, Edit, ExternalLink, Bluetooth } from 'lucide-react';
+import { thermalPrinter } from '@/lib/thermal-printer';
+import { formatThermalReceipt } from '@/lib/receipt-formatter';
+import { toast } from 'sonner';
 import { QuantitySelector } from './QuantitySelector';
 
 interface ShoppingCartProps {
@@ -75,6 +78,28 @@ export const ShoppingCart = ({
       setPaymentMethod('cash');
       setDiscount(0);
       setDiscountType('amount');
+    }
+  };
+
+  const handleThermalPrint = async () => {
+    const receipt = processTransaction(paymentMethod, discountAmount);
+    if (receipt) {
+      try {
+        const thermalContent = formatThermalReceipt(receipt, formatPrice);
+        const success = await thermalPrinter.print(thermalContent);
+        
+        if (success) {
+          toast.success('Nota berhasil dicetak!');
+          setPaymentMethod('cash');
+          setDiscount(0);
+          setDiscountType('amount');
+        } else {
+          toast.error('Gagal mencetak nota. Pastikan printer terhubung.');
+        }
+      } catch (error) {
+        console.error('Print error:', error);
+        toast.error('Terjadi kesalahan saat mencetak.');
+      }
     }
   };
 
@@ -151,6 +176,15 @@ export const ShoppingCart = ({
             </div>
             <div className="flex items-center gap-1 sm:gap-2">
               <Badge variant="secondary" className="text-xs">{cart.length} item</Badge>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleThermalPrint}
+                className="h-5 w-5 sm:h-6 sm:w-6 p-0"
+                title="Print Thermal"
+              >
+                <Printer className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+              </Button>
               <Button
                 size="sm"
                 variant="outline"
