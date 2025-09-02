@@ -136,7 +136,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .from('profiles')
       .select('admin_password')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
     return profile?.admin_password === password;
   };

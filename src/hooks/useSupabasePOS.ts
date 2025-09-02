@@ -175,16 +175,20 @@ export const useSupabasePOS = () => {
         sum + ((item.finalPrice || item.product.sellPrice) - item.product.costPrice) * item.quantity, 0
       );
 
+      // Generate invoice number
+      const { data: invoiceNumber } = await supabase.rpc('generate_invoice_number');
+
       // Create receipt
       const { data: receiptData, error: receiptError } = await supabase
         .from('receipts')
         .insert({
           user_id: user.id,
+          invoice_number: invoiceNumber,
           subtotal,
           discount,
           total,
           profit,
-          payment_method: paymentMethod
+          payment_method: paymentMethod || 'tunai'
         })
         .select()
         .single();
@@ -195,9 +199,12 @@ export const useSupabasePOS = () => {
       const receiptItems = cart.map(item => ({
         receipt_id: receiptData.id,
         product_id: item.product.id,
+        product_name: item.product.name,
         quantity: item.quantity,
-        unit_price: item.product.sellPrice,
-        final_price: item.finalPrice
+        unit_price: item.finalPrice || item.product.sellPrice,
+        cost_price: item.product.costPrice,
+        total_price: (item.finalPrice || item.product.sellPrice) * item.quantity,
+        profit: ((item.finalPrice || item.product.sellPrice) - item.product.costPrice) * item.quantity
       }));
 
       const { error: itemsError } = await supabase
