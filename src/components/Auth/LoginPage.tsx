@@ -16,10 +16,12 @@ export const LoginPage = () => {
     email: '',
     username: '',
     password: '',
+    confirmPassword: '',
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showSignUp, setShowSignUp] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
 
   useEffect(() => {
@@ -50,6 +52,34 @@ export const LoginPage = () => {
     
     if (result.error) {
       setError(result.error.message);
+    }
+    setIsLoading(false);
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Password tidak cocok');
+      setIsLoading(false);
+      return;
+    }
+
+    const result = await signUp(formData.email, formData.username, formData.password);
+    
+    if (result.error) {
+      setError(result.error.message);
+    } else {
+      toast.success('Akun berhasil dibuat! Silakan login.');
+      setShowSignUp(false);
+      setFormData({
+        email: '',
+        username: '',
+        password: '',
+        confirmPassword: '',
+      });
     }
     setIsLoading(false);
   };
@@ -140,24 +170,48 @@ export const LoginPage = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Kasir Toko Anjar</CardTitle>
+          <CardTitle className="text-2xl font-bold">
+            {showSignUp ? 'Daftar Akun Baru' : 'Kasir Toko Anjar'}
+          </CardTitle>
           <CardDescription>
-            Masuk ke sistem kasir
+            {showSignUp ? 'Buat akun baru untuk sistem kasir' : 'Masuk ke sistem kasir'}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSignIn} className="space-y-4">
+          <form onSubmit={showSignUp ? handleSignUp : handleSignIn} className="space-y-4">
+            {showSignUp && (
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ 
+                    ...formData, 
+                    email: e.target.value 
+                  })}
+                  placeholder="contoh@gmail.com"
+                  required
+                />
+              </div>
+            )}
+
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">
+                {showSignUp ? 'Username' : 'Email / Username'}
+              </Label>
               <Input
                 id="username"
                 type="text"
-                value={formData.email}
-                onChange={(e) => setFormData({ 
+                value={showSignUp ? formData.username : formData.email}
+                onChange={(e) => setFormData(showSignUp ? { 
                   ...formData, 
-                  email: e.target.value 
+                  username: e.target.value 
+                } : {
+                  ...formData,
+                  email: e.target.value
                 })}
-                placeholder="tokoanjar"
+                placeholder={showSignUp ? "username" : "tokoanjar atau email@gmail.com"}
                 required
               />
             </div>
@@ -174,6 +228,20 @@ export const LoginPage = () => {
               />
             </div>
 
+            {showSignUp && (
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+            )}
+
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
@@ -182,15 +250,36 @@ export const LoginPage = () => {
 
             <div className="space-y-2">
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Loading...' : 'Masuk'}
+                {isLoading ? 'Loading...' : (showSignUp ? 'Daftar' : 'Masuk')}
               </Button>
+              
+              {!showSignUp && (
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  className="w-full text-sm" 
+                  onClick={() => setShowForgotPassword(true)}
+                >
+                  Lupa Password?
+                </Button>
+              )}
+              
               <Button 
                 type="button" 
-                variant="ghost" 
-                className="w-full text-sm" 
-                onClick={() => setShowForgotPassword(true)}
+                variant="outline" 
+                className="w-full" 
+                onClick={() => {
+                  setShowSignUp(!showSignUp);
+                  setError('');
+                  setFormData({
+                    email: '',
+                    username: '',
+                    password: '',
+                    confirmPassword: '',
+                  });
+                }}
               >
-                Lupa Password?
+                {showSignUp ? 'Sudah punya akun? Masuk' : 'Belum punya akun? Daftar'}
               </Button>
             </div>
           </form>
