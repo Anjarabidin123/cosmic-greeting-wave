@@ -14,162 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
-      products: {
-        Row: {
-          barcode: string | null
-          category: string | null
-          cost_price: number
-          created_at: string
-          id: string
-          is_photocopy: boolean
-          name: string
-          sell_price: number
-          stock: number
-          updated_at: string
-        }
-        Insert: {
-          barcode?: string | null
-          category?: string | null
-          cost_price: number
-          created_at?: string
-          id?: string
-          is_photocopy?: boolean
-          name: string
-          sell_price: number
-          stock?: number
-          updated_at?: string
-        }
-        Update: {
-          barcode?: string | null
-          category?: string | null
-          cost_price?: number
-          created_at?: string
-          id?: string
-          is_photocopy?: boolean
-          name?: string
-          sell_price?: number
-          stock?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          admin_password: string | null
-          created_at: string
-          email: string
-          id: string
-          updated_at: string
-          user_id: string
-          username: string
-        }
-        Insert: {
-          admin_password?: string | null
-          created_at?: string
-          email: string
-          id?: string
-          updated_at?: string
-          user_id: string
-          username: string
-        }
-        Update: {
-          admin_password?: string | null
-          created_at?: string
-          email?: string
-          id?: string
-          updated_at?: string
-          user_id?: string
-          username?: string
-        }
-        Relationships: []
-      }
-      receipt_items: {
-        Row: {
-          created_at: string
-          final_price: number | null
-          id: string
-          product_id: string
-          quantity: number
-          receipt_id: string
-          unit_price: number
-        }
-        Insert: {
-          created_at?: string
-          final_price?: number | null
-          id?: string
-          product_id: string
-          quantity: number
-          receipt_id: string
-          unit_price: number
-        }
-        Update: {
-          created_at?: string
-          final_price?: number | null
-          id?: string
-          product_id?: string
-          quantity?: number
-          receipt_id?: string
-          unit_price?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "receipt_items_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "receipt_items_receipt_id_fkey"
-            columns: ["receipt_id"]
-            isOneToOne: false
-            referencedRelation: "receipts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      receipts: {
-        Row: {
-          created_at: string
-          discount: number
-          id: string
-          payment_method: string | null
-          profit: number
-          subtotal: number
-          total: number
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          discount?: number
-          id?: string
-          payment_method?: string | null
-          profit: number
-          subtotal: number
-          total: number
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          discount?: number
-          id?: string
-          payment_method?: string | null
-          profit?: number
-          subtotal?: number
-          total?: number
-          user_id?: string
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_invoice_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "kasir"
+      product_category: "fotocopy" | "atk" | "pramuka" | "lainnya"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -296,6 +161,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "kasir"],
+      product_category: ["fotocopy", "atk", "pramuka", "lainnya"],
+    },
   },
 } as const
