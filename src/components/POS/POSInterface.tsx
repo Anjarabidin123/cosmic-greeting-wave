@@ -29,9 +29,13 @@ import {
   DollarSign,
   BarChart3,
   LogOut,
-  Settings
+  Settings,
+  Bluetooth,
+  BluetoothConnected
 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
+import { thermalPrinter } from '@/lib/thermal-printer';
+import { useToast } from '@/hooks/use-toast';
 
 export const POSInterface = () => {
   const {
@@ -59,6 +63,8 @@ export const POSInterface = () => {
   const [currentTab, setCurrentTab] = useState('pos');
   const [showAdminProtection, setShowAdminProtection] = useState(false);
   const [pendingAdminAction, setPendingAdminAction] = useState<string | null>(null);
+  const [bluetoothConnected, setBluetoothConnected] = useState(false);
+  const { toast } = useToast();
 
   const handleProcessTransaction = async (paymentMethod?: string, discount?: number) => {
     const receipt = await processTransaction(paymentMethod, discount);
@@ -98,6 +104,41 @@ export const POSInterface = () => {
       setCurrentTab(pendingAdminAction);
       setPendingAdminAction(null);
     }
+    setShowAdminProtection(false);
+  };
+
+  const handleBluetoothConnect = async () => {
+    try {
+      const success = await thermalPrinter.connect();
+      if (success) {
+        setBluetoothConnected(true);
+        toast({
+          title: "Bluetooth Terhubung",
+          description: "Printer thermal berhasil terhubung!",
+        });
+      } else {
+        toast({
+          title: "Gagal Terhubung",
+          description: "Tidak dapat terhubung ke printer thermal.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Terjadi kesalahan saat menghubungkan Bluetooth.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleBluetoothDisconnect = () => {
+    thermalPrinter.disconnect();
+    setBluetoothConnected(false);
+    toast({
+      title: "Bluetooth Terputus",
+      description: "Printer thermal telah terputus.",
+    });
   };
 
   const handleLogout = async () => {
@@ -251,6 +292,23 @@ Profit: ${formatPrice(receipt.profit)}
             </div>
             
             <div className="flex items-center gap-2 sm:gap-4">
+              {/* Bluetooth Connection Button */}
+              <Button
+                variant={bluetoothConnected ? "default" : "outline"}
+                size="sm"
+                onClick={bluetoothConnected ? handleBluetoothDisconnect : handleBluetoothConnect}
+                className="flex items-center gap-2"
+              >
+                {bluetoothConnected ? (
+                  <BluetoothConnected className="h-4 w-4" />
+                ) : (
+                  <Bluetooth className="h-4 w-4" />
+                )}
+                <span className="hidden sm:inline">
+                  {bluetoothConnected ? 'Terputus' : 'Bluetooth'}
+                </span>
+              </Button>
+              
               <Button
                 variant="outline"
                 size="sm"
@@ -385,6 +443,7 @@ Profit: ${formatPrice(receipt.profit)}
                   receipts={receipts}
                   products={products}
                   onAddToCart={addToCart}
+                  bluetoothConnected={bluetoothConnected}
                 />
               </div>
             </div>
@@ -442,7 +501,12 @@ Profit: ${formatPrice(receipt.profit)}
               </TabsList>
               
               <TabsContent value="add-product" className="space-y-4">
-                <AddProductForm onAddProduct={addProduct} onClose={() => {}} />
+                <AddProductForm 
+                  onAddProduct={addProduct} 
+                  onUpdateProduct={updateProduct}
+                  products={products}
+                  onClose={() => {}} 
+                />
               </TabsContent>
               
               <TabsContent value="stock-management" className="space-y-4">

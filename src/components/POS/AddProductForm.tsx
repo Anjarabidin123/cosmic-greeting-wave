@@ -11,10 +11,12 @@ import { QuantitySelector } from './QuantitySelector';
 
 interface AddProductFormProps {
   onAddProduct: (product: Omit<Product, 'id'>) => void;
+  onUpdateProduct: (productId: string, updates: Partial<Product>) => void;
+  products: Product[];
   onClose: () => void;
 }
 
-export const AddProductForm = ({ onAddProduct, onClose }: AddProductFormProps) => {
+export const AddProductForm = ({ onAddProduct, onUpdateProduct, products, onClose }: AddProductFormProps) => {
   const [formData, setFormData] = useState({
     name: '',
     costPrice: '',
@@ -33,14 +35,27 @@ export const AddProductForm = ({ onAddProduct, onClose }: AddProductFormProps) =
       return;
     }
 
-    onAddProduct({
-      name: formData.name,
-      costPrice: parseFloat(formData.costPrice),
-      sellPrice: parseFloat(formData.sellPrice),
-      stock: (formData.isPhotocopy || isService) ? 0 : stockQuantity,
-      category: formData.category || undefined,
-      isPhotocopy: formData.isPhotocopy,
-    });
+    // Check if product with same name already exists
+    const existingProduct = products.find(product => 
+      product.name.toLowerCase() === formData.name.toLowerCase()
+    );
+
+    if (existingProduct) {
+      // Update existing product stock
+      onUpdateProduct(existingProduct.id, {
+        stock: existingProduct.stock + stockQuantity
+      });
+    } else {
+      // Add new product
+      onAddProduct({
+        name: formData.name,
+        costPrice: parseFloat(formData.costPrice),
+        sellPrice: parseFloat(formData.sellPrice),
+        stock: (formData.isPhotocopy || isService) ? 0 : stockQuantity,
+        category: formData.category || undefined,
+        isPhotocopy: formData.isPhotocopy,
+      });
+    }
 
     setFormData({
       name: '',

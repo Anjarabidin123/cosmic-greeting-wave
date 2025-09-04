@@ -20,6 +20,15 @@ export const LoginPage = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showSignUp, setShowSignUp] = useState(false);
+  const [showAfterHoursLogin, setShowAfterHoursLogin] = useState(false);
+  const [afterHoursPassword, setAfterHoursPassword] = useState('');
+
+  // Check if current time is within business hours (6 AM to 5 PM)
+  const isWithinBusinessHours = () => {
+    const now = new Date();
+    const hour = now.getHours();
+    return hour >= 6 && hour < 17; // 6 AM to 5 PM
+  };
 
   useEffect(() => {
     if (user && !loading) {
@@ -37,6 +46,13 @@ export const LoginPage = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check if outside business hours and require password
+    if (!isWithinBusinessHours() && !showAfterHoursLogin) {
+      setShowAfterHoursLogin(true);
+      return;
+    }
+
     setIsLoading(true);
     setError('');
 
@@ -51,6 +67,20 @@ export const LoginPage = () => {
       setError(result.error.message);
     }
     setIsLoading(false);
+  };
+
+  const handleAfterHoursAccess = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (afterHoursPassword === '7654321') {
+      setShowAfterHoursLogin(false);
+      setAfterHoursPassword('');
+      // Continue with normal login
+      handleSignIn(e);
+    } else {
+      setError('Kata sandi akses di luar jam buka salah');
+      setAfterHoursPassword('');
+    }
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -88,14 +118,53 @@ export const LoginPage = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">
-            {showSignUp ? 'Daftar Akun Baru' : 'Kasir Toko Anjar'}
+            {showAfterHoursLogin ? 'Akses Di Luar Jam Buka' : (showSignUp ? 'Daftar Akun Baru' : 'Kasir Toko Anjar')}
           </CardTitle>
           <CardDescription>
-            {showSignUp ? 'Buat akun baru untuk sistem kasir' : 'Masuk ke sistem kasir'}
+            {showAfterHoursLogin ? 'Sistem tutup jam 17:00-06:00. Masukkan kata sandi akses:' : (showSignUp ? 'Buat akun baru untuk sistem kasir' : 'Masuk ke sistem kasir')}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={showSignUp ? handleSignUp : handleSignIn} className="space-y-4">
+          {showAfterHoursLogin ? (
+            <form onSubmit={handleAfterHoursAccess} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="afterHoursPassword">Kata Sandi Akses</Label>
+                <Input
+                  id="afterHoursPassword"
+                  type="password"
+                  value={afterHoursPassword}
+                  onChange={(e) => setAfterHoursPassword(e.target.value)}
+                  placeholder="Masukkan kata sandi akses"
+                  required
+                />
+              </div>
+              
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              
+              <div className="space-y-2">
+                <Button type="submit" className="w-full">
+                  Akses Sistem
+                </Button>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="w-full" 
+                  onClick={() => {
+                    setShowAfterHoursLogin(false);
+                    setAfterHoursPassword('');
+                    setError('');
+                  }}
+                >
+                  Kembali
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={showSignUp ? handleSignUp : handleSignIn} className="space-y-4">
             {showSignUp && (
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -189,6 +258,7 @@ export const LoginPage = () => {
               </Button>
             </div>
           </form>
+          )}
         </CardContent>
       </Card>
     </div>
