@@ -7,7 +7,6 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 
 export const LoginPage = () => {
   const { signIn, signInWithUsername, signUp, user, loading } = useAuth();
@@ -20,9 +19,7 @@ export const LoginPage = () => {
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showSignUp, setShowSignUp] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
 
   useEffect(() => {
     if (user && !loading) {
@@ -72,7 +69,7 @@ export const LoginPage = () => {
     if (result.error) {
       setError(result.error.message);
     } else {
-      toast.success('Akun berhasil dibuat! Silakan login.');
+      toast.success('Akun berhasil dibuat! Silakan cek email Anda untuk konfirmasi, lalu login.');
       setShowSignUp(false);
       setFormData({
         email: '',
@@ -84,87 +81,7 @@ export const LoginPage = () => {
     setIsLoading(false);
   };
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
 
-    try {
-      const { data, error } = await supabase.functions.invoke('reset-password', {
-        body: { email: resetEmail }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (data.error) {
-        setError(data.error);
-      } else {
-        toast.success(data.message);
-        setShowForgotPassword(false);
-        setResetEmail('');
-      }
-    } catch (error: any) {
-      setError(error.message || 'Terjadi kesalahan saat mengirim email reset password');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (showForgotPassword) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5 p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">Lupa Password</CardTitle>
-            <CardDescription>
-              Masukkan email untuk reset password
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleForgotPassword} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="resetEmail">Email</Label>
-                <Input
-                  id="resetEmail"
-                  type="email"
-                  value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
-                  placeholder="tokoanjar036@gmail.com atau anjarbdn@gmail.com"
-                  required
-                />
-              </div>
-
-              {error && (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-
-              <div className="space-y-2">
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? 'Mengirim...' : 'Kirim Email Reset'}
-                </Button>
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  className="w-full" 
-                  onClick={() => {
-                    setShowForgotPassword(false);
-                    setError('');
-                    setResetEmail('');
-                  }}
-                >
-                  Kembali ke Login
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5 p-4">
@@ -252,17 +169,6 @@ export const LoginPage = () => {
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? 'Loading...' : (showSignUp ? 'Daftar' : 'Masuk')}
               </Button>
-              
-              {!showSignUp && (
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  className="w-full text-sm" 
-                  onClick={() => setShowForgotPassword(true)}
-                >
-                  Lupa Password?
-                </Button>
-              )}
               
               <Button 
                 type="button" 

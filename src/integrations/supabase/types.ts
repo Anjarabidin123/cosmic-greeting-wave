@@ -55,31 +55,34 @@ export type Database = {
       }
       profiles: {
         Row: {
-          admin_password: string | null
           created_at: string
+          display_name: string | null
           email: string | null
           full_name: string | null
           id: string
+          is_admin: boolean | null
           updated_at: string
           user_id: string
           username: string | null
         }
         Insert: {
-          admin_password?: string | null
           created_at?: string
+          display_name?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
+          is_admin?: boolean | null
           updated_at?: string
           user_id: string
           username?: string | null
         }
         Update: {
-          admin_password?: string | null
           created_at?: string
+          display_name?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
+          is_admin?: boolean | null
           updated_at?: string
           user_id?: string
           username?: string | null
@@ -179,6 +182,45 @@ export type Database = {
         }
         Relationships: []
       }
+      shopping_items: {
+        Row: {
+          created_at: string
+          current_stock: number | null
+          id: string
+          is_completed: boolean
+          name: string
+          notes: string | null
+          quantity: number | null
+          unit: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_stock?: number | null
+          id?: string
+          is_completed?: boolean
+          name: string
+          notes?: string | null
+          quantity?: number | null
+          unit?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_stock?: number | null
+          id?: string
+          is_completed?: boolean
+          name?: string
+          notes?: string | null
+          quantity?: number | null
+          unit?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -208,6 +250,19 @@ export type Database = {
       generate_invoice_number: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      generate_invoice_number_v2: {
+        Args: { is_manual: boolean; tx_date?: string }
+        Returns: string
+      }
+      get_user_by_username_or_email: {
+        Args: { identifier: string }
+        Returns: {
+          email: string
+          full_name: string
+          user_id: string
+          username: string
+        }[]
       }
       has_role: {
         Args: {

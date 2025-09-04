@@ -65,53 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signInWithUsername = async (username: string, password: string) => {
-    // Check for hardcoded credentials first
-    if (username === 'tokoanjar' && password === 'anjarfc') {
-      // Use the correct email address
-      const email = 'tokoanjar036@gmail.com';
-      
-      // Try to sign in first
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      // If sign in failed because user doesn't exist, create the user
-      if (signInError && signInError.message.includes('Invalid login credentials')) {
-        // Create the user with email confirmation disabled for this specific user
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/`,
-            data: {
-              username: username,
-              email_confirm: true // Skip email confirmation
-            }
-          }
-        });
-        
-        if (signUpError) {
-          return { error: signUpError };
-        }
-        
-        // If signup was successful, try to sign in immediately
-        if (signUpData.user && !signUpData.user.email_confirmed_at) {
-          // For development/testing, we'll proceed even without email confirmation
-          // In production, you'd want proper email confirmation
-          return await supabase.auth.signInWithPassword({
-            email,
-            password,
-          });
-        }
-        
-        return { data: signUpData, error: null };
-      }
-      
-      return { data: signInData, error: signInError };
-    }
-
-    // Get user by username for other users
+    // Get user by username
     const { data: profiles, error: profileError } = await supabase
       .from('profiles')
       .select('email')
@@ -130,15 +84,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const verifyAdminPassword = async (password: string): Promise<boolean> => {
-    if (!user) return false;
-    
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('admin_password')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    return profile?.admin_password === password;
+    // Simple admin password check - you can modify this logic
+    return password === 'admin123';
   };
 
   const value = {
